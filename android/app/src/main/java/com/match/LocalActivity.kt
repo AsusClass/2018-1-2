@@ -11,17 +11,18 @@ import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_local.*
 import java.io.*
+import java.lang.StringBuilder
 import java.util.*
 import java.util.regex.Pattern
 
 class LocalActivity : AppCompatActivity() {
 
-    private var temps: MutableList<String> = ArrayList()
     lateinit var keyWord: EditText
     private val permissions = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     lateinit var readFileTime: TextView
     lateinit var matchTime: TextView
     var lastTme: Long = 0
+    var temp_str: StringBuilder = StringBuilder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,22 +43,18 @@ class LocalActivity : AppCompatActivity() {
             Toast.makeText(this, "检索内容不合法", Toast.LENGTH_SHORT).show()
             return
         }
+        btn_local_search.isClickable = false
         matchFile(et_file_name.text.toString())
         val keyword = keyWord.text.toString()
         val p = Pattern.compile(keyword)
         var i = 0
-        Thread({
-            lastTme = Date().time
-            temps.forEach {
-                val m = p.matcher(it)
-                while (m.find()) {
-                    i++
-                }
-            }
-            runOnUiThread {
-                matchTime.text = "匹配" + i + "个   " + "匹配耗时:" + (Date().time - lastTme!!) + "毫秒"
-            }
-        }).start()
+        lastTme = Date().time
+        val m = p.matcher(temp_str)
+        while (m.find()) {
+            i++
+        }
+        matchTime.text = "匹配" + i + "个   " + "匹配耗时:" + (Date().time - lastTme!!) + "毫秒"
+        btn_local_search.isClickable = true
     }
 
     private fun matchFile(fileName: String) {
@@ -67,7 +64,7 @@ class LocalActivity : AppCompatActivity() {
             val reader = BufferedReader(InputStreamReader(fin, "UTF-8"))
             var line: String? = reader.readLine()
             while (line != null) {
-                temps.add(line)
+                temp_str.append(line)
                 line = reader.readLine()
             }
             reader.close()

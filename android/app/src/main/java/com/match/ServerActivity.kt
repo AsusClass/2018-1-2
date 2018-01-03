@@ -15,9 +15,7 @@ import retrofit2.Call
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Multipart
-import retrofit2.http.POST
-import retrofit2.http.Part
+import retrofit2.http.*
 import java.io.File
 
 class ServerActivity : AppCompatActivity() {
@@ -71,7 +69,7 @@ class ServerActivity : AppCompatActivity() {
 }
 
 data class SearchResult(val code: Int, val data: SearchItem)
-data class SearchItem(val count: Int, val keyword: String, val time: Int, val upload_time: Int)
+data class SearchItem(val count: Int, val keyword: String, val time: Double, val upload_time: Double)
 
 interface ServiceApi {
     @Multipart
