@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from flask import Flask, request
 from flask import jsonify
 import os
@@ -20,20 +19,19 @@ def inputFile(file_name):
 
 
 def prepare(file_name):
-    start_time = time.time()
+    start_time = time.clock()
     inputFile(file_name)
-    diff_time = time.time() - start_time
+    diff_time = time.clock() - start_time
     print("加载文件耗时:" + str(diff_time))
 
 
 def searchKeyWord(key, upload_time):
-    start_time = datetime.now().microsecond
+    start_time = time.clock()
     count = 0
     for s in contentList:
         count += s.count(key)
-    diff_time = datetime.now().microsecond - start_time
-    print(diff_time)
-    return response(200, {"keyword": key, "upload_time": upload_time, "count": count, "time": str(diff_time)})
+    return response(200,
+                    {"keyword": key, "upload_time": upload_time, "count": count, "time": time.clock() - start_time})
 
 
 def response(code, msg):
@@ -42,13 +40,13 @@ def response(code, msg):
 
 @app.route('/remote', methods=['POST'])
 def upload():
-    upload_start_time = datetime.now().microsecond
+    upload_start_time = time.clock()
     upload_file = request.files['file']
     file_name = upload_file.filename
     upload_file.save(os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], file_name))
-    upload_time = datetime.now().microsecond - upload_start_time
+    upload_time = time.clock() - upload_start_time
     prepare("c://static/uploads/" + file_name)
-    return jsonify(searchKeyWord("1", upload_time))
+    return jsonify(searchKeyWord("网络", upload_time))
 
 
 if __name__ == '__main__':
