@@ -4,8 +4,10 @@ import android.Manifest
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
 import android.text.TextUtils
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.Toast
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -21,11 +23,17 @@ import java.io.File
 class ServerActivity : AppCompatActivity() {
 
     private val permissions = arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    var adapter: LocalDataAdapter? = null
+    var total_time: Long = 0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_server)
         ActivityCompat.requestPermissions(this, permissions, 100)
+        rcv.layoutManager = LinearLayoutManager(this)
+        adapter = LocalDataAdapter()
+        rcv.adapter = adapter
     }
 
     fun onRemoteSearch(view: View) {
@@ -50,20 +58,25 @@ class ServerActivity : AppCompatActivity() {
 
                     override fun onResponse(call: Call<ResponseBody>?, response: Response<ResponseBody>?) {
                         btn_server_search.isClickable = true
-                        parseResult(response?.body()?.string()!!)
+                        parseResult(response?.body()?.string())
                     }
                 })
     }
 
-    fun parseResult(result: String) {
-        val result: SearchResult = Gson().fromJson(result, object : TypeToken<SearchResult>() {}.type)
-        when (result.code) {
-            200 -> {
-                tv_server_tips.text = "计算完成"
-                tv_server_search_time.text = "${result.data.time.toString()} ms"
-                tv_server_upload_time.text = "${result.data.upload_time.toString()} ms"
-                tv_server_key_count.text = result.data.count.toString()
+    fun parseResult(result: String?) {
+        try {
+            val result: SearchResult = Gson().fromJson(result, object : TypeToken<SearchResult>() {}.type)
+            when (result.code) {
+                200 -> {
+                    tv_server_tips.text = "计算完成"
+                    total_time += (result.data.upload_time.toDouble() * 1000000).toLong()
+                    total_time += (result.data.time.toDouble() * 1000000).toLong()
+                    adapter?.refresh(LocalData((result.data.upload_time.toDouble() * 1000000).toLong(), result.data.count.toLong(), (result.data.time.toDouble() * 1000000).toLong()))
+                    tv_server_key_count.text = "当前次数:${adapter?.itemCount}\t\t累积时间:${total_time / 1000000f}\t\t平均时间:${total_time / (adapter?.itemCount!! * 1000000f)}"
+                }
             }
+        } catch (e: Exception) {
+            tv_server_tips.text = "服务器返回数据:${result}"
         }
     }
 }
